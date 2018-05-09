@@ -11,3 +11,4 @@ Homemade 2-D printer project
   ->Draw the 3-D models for printing
     -> 3-D print it.
 # Bill of materials
+  -> Arduino MEGA 2560
