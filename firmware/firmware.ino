@@ -3,7 +3,13 @@
  */
 #include <Stepper.h>
 
+//Functions
 void read_command(String*);
+void home(Stepper, Stepper);
+
+//Global variables
+String command;
+const int stepsPerRevolution = 2048;
  
 void setup() {
   
@@ -21,6 +27,7 @@ void setup() {
   #define Y_step_4 1  
   #define start 1
   #define emergency 1
+  #define MAX_MOTOR_SPEED 10
 
   // Modes of each pin defined above
   pinMode(X_end, INPUT);
@@ -36,33 +43,42 @@ void setup() {
   pinMode(Y_step_4, OUTPUT);
   pinMode(start, INPUT);
   pinMode(emergency, INPUT);
-
-  const int stepsPerRevolution = 200;     // Alterar para o de vdd
-
+ 
   // Initializing the stepper motors
   Stepper Motor_x(stepsPerRevolution, X_step_1, X_step_2, X_step_3, X_step_4);
-  Stepper Motor_Y(stepsPerRevolution, Y_step_1, Y_step_2, Y_step_3, Y_step_4);
-  
-  
+  Stepper Motor_y(stepsPerRevolution, Y_step_1, Y_step_2, Y_step_3, Y_step_4);
+  Motor_x.setSpeed(MAX_MOTOR_SPEED);
+  Motor_y.setSpeed(MAX_MOTOR_SPEED);
+
   Serial.begin(9600);
-
-
-
-
+   
   while(digitalRead(start) == 0){
     // Wait for the button press to start the loop
   }
 }
 
 void loop() {
-
-  String command;
-  read_command(&command); 
+  
+  while(digitalRead(emergency) == 0){ // Does the printing loop while the emergency button is NOT pressed
+    read_command(&command); 
+    
+  }
+ 
 }
 
 void read_command(String *command){
 
   *command = Serial.readString();
+  Serial.write("Command Recieved");
   
+}
+
+void home(Stepper Motor_x, Stepper Motor_y){
+  while(digitalRead(X_end) == 0){
+    Motor_x.step(-stepsPerRevolution);
+  }
+  while(digitalRead(Y_end) == 0){
+    Motor_y.step(-stepsPerRevolution);
+  }
 }
 
