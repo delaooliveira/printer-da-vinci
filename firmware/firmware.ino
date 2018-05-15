@@ -6,6 +6,7 @@
 //Functions
 void read_command(String*);
 void home(Stepper, Stepper);
+void G00(Stepper, Stepper, float, float);
 
 //Global variables
 String command;
@@ -80,26 +81,29 @@ void read_command(String *command){
 
 void G28(Stepper Motor_x, Stepper Motor_y){
   while(digitalRead(X_end) == 0){
-    Motor_x.step(-stepsPerRevolution);
+    Motor_x.step(-1);
   }
   while(digitalRead(Y_end) == 0){
-    Motor_y.step(-stepsPerRevolution);
+    Motor_y.step(-1);
   }
 }
 
 void G00(Stepper Motor_x, Stepper Motor_y, float x_desired, float y_desired){
 
   //Calculating the number os steps each axis should move
-  int xSteps, ySteps, meanStep;
+  int xSteps, ySteps;
   xSteps = round(x_desired*anglePerStep*gearRadius*gearRatio);
   ySteps = round(y_desired*anglePerStep*gearRadius*gearRatio);
 
-  meanStep = (xSteps+ySteps)/2;
-  
-  for (int i=0; i<meanStep; i++){
-    Motor_x.step(meanStep);   // FIX-ME: x and y steps are differents // Should do weighted average or sometinhg like that so they reach end point together
-    Motor_y.step(meanStep);
+  // Moving each motor a 10th of the total each loop (Arduino doesn't support multi-threading)
+  for (int i=0; i<10; i++){
+    Motor_x.step(round(xSteps/10));   
+    Motor_y.step(round(ySteps/10));
   }
+
+  // This will correct any last differences
+  Motor_x.step(xSteps%10);
+  Motor_y.step(ySteps%10);
   
 }
 
