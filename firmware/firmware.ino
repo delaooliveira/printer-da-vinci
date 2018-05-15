@@ -54,7 +54,7 @@ void setup() {
   Motor_x.setSpeed(MAX_MOTOR_SPEED);
   Motor_y.setSpeed(MAX_MOTOR_SPEED);
 
-  Serial.begin(9600);
+  Serial.begin(115200);
    
   while(digitalRead(start) == 0){
     // Wait for the button press to start the loop
@@ -74,7 +74,7 @@ void read_command(String *command){
 
   if (Serial.available() > 0){
     *command = Serial.readString();
-    Serial.write("Command Recieved");
+    Serial.write(1);
   }
   
 }
