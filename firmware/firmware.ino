@@ -4,29 +4,30 @@
 #include <Stepper.h>
 
 //Functions
-void read_command(String*);
-void home(Stepper, Stepper);
+void read_command();
+void G28(Stepper, Stepper);
 void G00(Stepper, Stepper, float, float);
 
 //Global variables
 String command;
+bool taskDone = false;
  
 void setup() {
   
   // Definitions of the pins and constants
-  #define X_end               1
-  #define Y_end               1
-  #define Z_actuator          1
-  #define X_step_1            1
-  #define X_step_2            1
-  #define X_step_3            1
-  #define X_step_4            1
-  #define Y_step_1            1
-  #define Y_step_2            1
-  #define Y_step_3            1
-  #define Y_step_4            1  
-  #define start               1 
-  #define emergency           1
+  #define X_end               50
+  #define Y_end               51
+  #define Z_actuator          52
+  #define X_step_1            53
+  #define X_step_2            54
+  #define X_step_3            55
+  #define X_step_4            56
+  #define Y_step_1            57
+  #define Y_step_2            58
+  #define Y_step_3            59
+  #define Y_step_4            60 
+  #define start               63
+  #define emergency           64
   #define stepsPerRevolution  2048
   #define anglePerStep        0.00306796157 // 2*pi/stepsPerRevolution | Unit: rad
   #define gearRadius          25            // Unit: mm
@@ -47,34 +48,43 @@ void setup() {
   pinMode(Y_step_4, OUTPUT);
   pinMode(start, INPUT);
   pinMode(emergency, INPUT);
- 
-  // Initializing the stepper motors
+  pinMode(LED_BUILTIN, OUTPUT);
+
+  Serial.begin(9600);
+   
+  //while(digitalRead(start) == 0){
+    // Wait for the button press to start the loop
+  //}
+}
+
   Stepper Motor_x(stepsPerRevolution, X_step_1, X_step_2, X_step_3, X_step_4);
   Stepper Motor_y(stepsPerRevolution, Y_step_1, Y_step_2, Y_step_3, Y_step_4);
-  Motor_x.setSpeed(MAX_MOTOR_SPEED);
-  Motor_y.setSpeed(MAX_MOTOR_SPEED);
-
-  Serial.begin(115200);
-   
-  while(digitalRead(start) == 0){
-    // Wait for the button press to start the loop
-  }
-}
 
 void loop() {
   
-  while(digitalRead(emergency) == 0){ // Does the printing loop while the emergency button is NOT pressed
-    read_command(&command); 
+  Motor_x.setSpeed(MAX_MOTOR_SPEED);
+  Motor_y.setSpeed(MAX_MOTOR_SPEED);
+  while(true){
+  //while(digitalRead(emergency) == 0){ // Does the printing loop while the emergency button is NOT pressed
+    read_command(); 
+
+    if (command.startsWith("G28")) G28(Motor_x, Motor_y);
     
-  }
+    
+  }//}
  
 }
 
-void read_command(String *command){
+void read_command(){
+
+  while(!Serial){Serial.println("Waiting USB port to be available...");}
 
   if (Serial.available() > 0){
-    *command = Serial.readString();
-    Serial.write(1);
+    command = Serial.readString();
+    Serial.print("Command recived:");
+    Serial.println(command);
+    Serial.write(1); // token reguarding the acquaintance of the command line
+    taskDone = false;    
   }
   
 }
@@ -86,6 +96,7 @@ void G28(Stepper Motor_x, Stepper Motor_y){
   while(digitalRead(Y_end) == 0){
     Motor_y.step(-1);
   }
+  taskDone = true;
 }
 
 void G00(Stepper Motor_x, Stepper Motor_y, float x_desired, float y_desired){
@@ -104,6 +115,7 @@ void G00(Stepper Motor_x, Stepper Motor_y, float x_desired, float y_desired){
   // This will correct any last differences
   Motor_x.step(xSteps%10);
   Motor_y.step(ySteps%10);
-  
+
+  taskDone = true;
 }
 

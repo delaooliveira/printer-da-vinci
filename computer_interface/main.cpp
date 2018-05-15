@@ -20,18 +20,19 @@ Program flow:
 
 int main (){
 
-    fstream file;
-    fstream arduino("/dev/ttyUSB0", fstream::in | fstream::out);
-
-    // openGCodeFile(&file);
-    startUSBCommunication();
-
-    int* filePointer = 0;
+    ifstream gCodeFile;
+    fstream arduino("/dev/ttyUSB0", ios::in | ios::out);
     string command;
 
-    setMessageToSend(file, filePointer, command);
-    sendMessage(command, arduino);
-    while(!isTaskDone()){}
+    openGCodeFile(&gCodeFile);
+    startUSBCommunication();
+    
+    while(!command.end()){
+        setMessageToSend(gCodeFile, &command);
+
+        sendMessage(command, arduino);
+        while(!isTaskDone()){}
+    }
     
 
     return 0;
